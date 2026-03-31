@@ -10,7 +10,7 @@ Source .mov  -->  Transcode  -->  Thumbnail  -->  Upload  -->  Schedule
 ## 1. Transcode
 
 ### Input
-- Path: `/Volumes/Lacie/videos/bitwig-folk/Folk Sequence NNN.mov`
+- Path: `/Volumes/Lacie/videos/folk-sequence/Folk Sequence NNN.mov`
 - Format: H.264 Main, 4096x2328, ~60fps VFR, AAC-LC 100kbps
 
 ### ffmpeg Command

@@ -1,5 +1,5 @@
 [project]
-name = "bitwig-folk"
+name = "folk-sequence"
 version = "0.1.0"
 description = "Automated pipeline for processing and uploading Bitwig Studio screen recordings to YouTube"
 readme = "README.md"

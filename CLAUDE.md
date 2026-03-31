@@ -8,7 +8,7 @@ Automated pipeline for processing and uploading Bitwig Studio screen recordings 
 - **URL**: https://www.youtube.com/@FolkSequence
 - **Website**: https://jalopy.music/
 - **Content**: Screen recordings of music creation in Bitwig Studio — no narration, no edits
-- **Source videos**: `/Volumes/Lacie/videos/bitwig-folk/Folk Sequence NNN.mov`
+- **Source videos**: `/Volumes/Lacie/videos/folk-sequence/Folk Sequence NNN.mov`
 - **Note**: Video 000 (`Bitwig Folk 000.mov`) exists but will not be posted (screen recording mistake). Series starts at 001.
 
 ## Pipeline Steps

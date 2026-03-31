@@ -24,8 +24,8 @@ Automated pipeline for processing Bitwig Studio screen recordings and uploading 
 
 ```bash
 # Clone and install
-git clone git@github.com:bedwards/bitwig-folk.git
-cd bitwig-folk
+git clone git@github.com:bedwards/folk-sequence.git
+cd folk-sequence
 uv sync
 
 # Authenticate with YouTube (one-time)
@@ -39,7 +39,7 @@ uv run folkseq doctor
 
 ```bash
 # Transcode a video for YouTube
-uv run folkseq transcode "/Volumes/Lacie/videos/bitwig-folk/Folk Sequence 001.mov"
+uv run folkseq transcode "/Volumes/Lacie/videos/folk-sequence/Folk Sequence 001.mov"
 
 # Generate a thumbnail
 uv run folkseq thumbnail 001
