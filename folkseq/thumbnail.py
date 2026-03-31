@@ -98,7 +98,7 @@ def generate_thumbnail(episode, candidates=3):
                             data=image_data.data,
                             mime_type=image_data.mime_type,
                         ),
-                        types.Part.from_text(ANALYSIS_PROMPT),
+                        types.Part.from_text(text=ANALYSIS_PROMPT),
                     ]
                 )
             ],
