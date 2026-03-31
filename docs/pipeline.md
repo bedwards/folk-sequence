@@ -22,6 +22,7 @@ ffmpeg -i "Folk Sequence NNN.mov" \
   -r 60 -g 30 -bf 2 -flags +cgop \
   -pix_fmt yuv420p \
   -colorspace bt709 -color_primaries bt709 -color_trc bt709 \
+  -af loudnorm=I=-14:TP=-1:LRA=11 \
   -c:a aac -b:a 384k -ar 48000 -ac 2 \
   -movflags +faststart \
   -y "folk-sequence-NNN.mp4"
@@ -33,6 +34,7 @@ ffmpeg -i "Folk Sequence NNN.mov" \
 - `-preset slow` for better compression efficiency (worth the time for uploads)
 - `-b:v 35M` matches YouTube's recommended 4K SDR bitrate
 - `-g 30` sets GOP to half the frame rate (30 frames at 60fps)
+- `loudnorm=I=-14:TP=-1:LRA=11` normalizes audio to YouTube's -14 LUFS target with -1 dBTP ceiling
 - `-movflags +faststart` moves moov atom to front for streaming
 
 ### Output

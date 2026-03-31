@@ -48,6 +48,7 @@ ffmpeg -i input.mov \
   -b:v 35M -maxrate 40M -bufsize 80M \
   -r 60 -g 30 -bf 2 \
   -pix_fmt yuv420p -colorspace bt709 -color_primaries bt709 -color_trc bt709 \
+  -af loudnorm=I=-14:TP=-1:LRA=11 \
   -c:a aac -b:a 384k -ar 48000 -ac 2 \
   -movflags +faststart \
   -y output.mp4
