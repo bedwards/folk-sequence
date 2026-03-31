@@ -117,6 +117,15 @@ ffmpeg -i input.mov \
 - API key location: `~/.config/.env` (NEVER commit this)
 - Used for: thumbnails (1280x720), channel banner (2560x1440), profile pic (800x800)
 
+## Monetization (pending YTP eligibility)
+
+Settings to apply once accepted into YouTube Partner Program (1,000 subscribers + 4,000 watch hours):
+
+- **Ads**: Pre-roll only. No mid-roll, no post-roll. Channel-wide setting — all videos the same.
+- **Channel Memberships** (Join button): Enabled. No perks — just "keep this channel going."
+- **No Shorts**: Not creating Shorts, don't track Shorts thresholds.
+- `folkseq status` shows YTP progress (subscriber count) on every run.
+
 ## Dependencies
 
 - **System**: ffmpeg, ffprobe, magick (ImageMagick)

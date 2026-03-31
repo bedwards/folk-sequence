@@ -11,6 +11,34 @@ THUMBNAIL_DIR = OUTPUT_DIR / "thumbnails"
 SCHEDULE_PATH = OUTPUT_DIR / "logs" / "schedule.json"
 
 
+def _show_ytp_progress():
+    """Show progress toward YouTube Partner Program thresholds."""
+    try:
+        from folkseq.auth import build_youtube
+
+        youtube = build_youtube()
+
+        # Get subscriber count
+        channels = youtube.channels().list(part="statistics", mine=True).execute()
+        if not channels.get("items"):
+            return
+
+        stats = channels["items"][0]["statistics"]
+        subs = int(stats.get("subscriberCount", 0))
+        # viewCount is lifetime views, not watch hours — need analytics for that
+        # but we can show what we have
+
+        # Get watch time from YouTube Analytics API if available
+        # For now, show subscriber progress (watch hours require separate API scope)
+        print()
+        print("YouTube Partner Program:")
+        print(f"  Subscribers: {subs:,} / 1,000 ({subs * 100 // 1000}%)")
+        print(f"  Watch hours: check YouTube Studio > Analytics > Overview")
+        print(f"  Threshold:   1,000 subscribers + 4,000 public watch hours (last 12 months)")
+    except Exception:
+        pass
+
+
 def show_status():
     """Print a table showing the pipeline status of every known episode."""
     episodes = set()
@@ -106,3 +134,6 @@ def show_status():
         f"Total: {n_total} episodes | {n_transcoded} transcoded | "
         f"{n_thumbnails} thumbnails | {n_scheduled} scheduled | {n_uploaded} uploaded"
     )
+
+    # YouTube Partner Program progress
+    _show_ytp_progress()
