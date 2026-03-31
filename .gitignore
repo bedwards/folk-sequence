@@ -8,3 +8,19 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Secrets and credentials — NEVER commit
+.env
+*.env
+client_secrets.json
+client_secret_*.json
+token.json
+token.pickle
+oauth2_token.json
+
+# Output files
+output/
+*.mp4
+
+# OS
+.DS_Store

@@ -1,0 +1,115 @@
+# Video Pipeline — Technical Reference
+
+## Overview
+
+```
+Source .mov  -->  Transcode  -->  Thumbnail  -->  Upload  -->  Schedule
+                  (ffmpeg)       (Gemini)        (YT API)    (publishAt)
+```
+
+## 1. Transcode
+
+### Input
+- Path: `/Volumes/Lacie/videos/bitwig-folk/Bitwig Folk NNN.mov`
+- Format: H.264 Main, 4096x2328, ~60fps VFR, AAC-LC 100kbps
+
+### ffmpeg Command
+```bash
+ffmpeg -i "Bitwig Folk NNN.mov" \
+  -vf "crop=4096:2304:0:12,scale=3840:2160:flags=lanczos" \
+  -c:v libx264 -profile:v high -level 5.1 -preset slow \
+  -b:v 35M -maxrate 40M -bufsize 80M \
+  -r 60 -g 30 -bf 2 -flags +cgop \
+  -pix_fmt yuv420p \
+  -colorspace bt709 -color_primaries bt709 -color_trc bt709 \
+  -c:a aac -b:a 384k -ar 48000 -ac 2 \
+  -movflags +faststart \
+  -y "bitwig-folk-NNN.mp4"
+```
+
+### Processing Notes
+- `crop=4096:2304:0:12` removes 12px from top and 12px from bottom to achieve 16:9
+- `scale=3840:2160:flags=lanczos` scales to standard 4K UHD with high-quality resampling
+- `-preset slow` for better compression efficiency (worth the time for uploads)
+- `-b:v 35M` matches YouTube's recommended 4K SDR bitrate
+- `-g 30` sets GOP to half the frame rate (30 frames at 60fps)
+- `-movflags +faststart` moves moov atom to front for streaming
+
+### Output
+- Path: `output/bitwig-folk-NNN.mp4`
+- Expected size: ~3.9 GB for a 15-min video at 35 Mbps
+
+## 2. Thumbnail Generation
+
+### Process
+1. Call Gemini Nano Banana 2 API with episode-specific prompt
+2. Decode base64 PNG response
+3. Resize to exactly 1280x720 with ImageMagick
+4. Convert to JPEG at quality 95 (must be under 2 MB)
+5. Analyze with Gemini, pick best of 3 candidates
+
+### Output
+- Path: `output/thumbnails/bitwig-folk-NNN.jpg`
+- Size: 1280x720, JPEG, < 2 MB
+
+## 3. Upload
+
+### YouTube Data API v3 Flow
+1. Load OAuth 2.0 credentials (refresh token)
+2. Build `youtube` service client
+3. Create `videos.insert` request with:
+   - `snippet.title`: "Bitwig Folk NNN"
+   - `snippet.description`: video description with jalopy.music link
+   - `snippet.tags`: default tag set
+   - `snippet.categoryId`: "10" (Music)
+   - `status.privacyStatus`: "private" (for scheduled publishing)
+   - `status.publishAt`: ISO 8601 datetime
+   - `status.selfDeclaredMadeForKids`: false
+4. Execute resumable upload with exponential backoff
+5. Set thumbnail via `thumbnails.set`
+
+### Quota Budget
+- `videos.insert`: 1600 units
+- `thumbnails.set`: 50 units
+- Daily quota: 10,000 units
+- Max uploads per day: ~6
+
+## 4. Scheduling
+
+### Logic
+```python
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
+central = ZoneInfo("America/Chicago")
+
+def next_publish_time(start_date, episode_offset):
+    """Calculate publish time for episode N days after start."""
+    publish_date = start_date + timedelta(days=episode_offset)
+    local_time = datetime(
+        publish_date.year, publish_date.month, publish_date.day,
+        7, 30, 0, tzinfo=central
+    )
+    return local_time.isoformat()
+```
+
+### DST Handling
+- `America/Chicago` automatically handles CDT (UTC-5) and CST (UTC-6)
+- 7:30 AM Central is always 7:30 AM local regardless of DST
+
+## 5. Output Directory Structure
+
+```
+output/
+  bitwig-folk-000.mp4
+  bitwig-folk-001.mp4
+  thumbnails/
+    bitwig-folk-000.jpg
+    bitwig-folk-001.jpg
+  channel/
+    profile.png      (800x800)
+    banner.png       (2560x1440)
+  logs/
+    upload-000.json   (API response)
+    upload-001.json
+```
