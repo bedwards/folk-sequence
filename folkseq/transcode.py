@@ -9,6 +9,8 @@ OUTPUT_DIR = Path("output")
 
 EPISODE_RE = re.compile(r"Folk Sequence (\d{3})")
 
+MAX_DURATION = 899.0  # 14 minutes 59 seconds — hard cap, trim from end if exceeded
+
 
 def _probe_duration(input_path):
     """Get video duration in seconds via ffprobe."""
@@ -64,6 +66,12 @@ def transcode(input_path, output=None, dry_run=False):
     # Probe duration for fade-out calculation
     print(f"Probing duration: {input_path}")
     duration = _probe_duration(input_path)
+
+    # Enforce max duration — trim from end if exceeded
+    if duration > MAX_DURATION:
+        print(f"Duration {duration:.1f}s exceeds {MAX_DURATION:.0f}s limit — trimming to {MAX_DURATION:.0f}s")
+        duration = MAX_DURATION
+
     fade_out_start = duration - 3.0
     print(f"Duration: {duration:.1f}s — fade out at {fade_out_start:.1f}s")
 
@@ -82,6 +90,7 @@ def transcode(input_path, output=None, dry_run=False):
 
     cmd = [
         "ffmpeg", "-i", str(input_path),
+        "-t", str(duration),
         "-vf", vf,
         "-c:v", "libx264", "-profile:v", "high", "-level", "5.1", "-preset", "slow",
         "-b:v", "35M", "-maxrate", "40M", "-bufsize", "80M",

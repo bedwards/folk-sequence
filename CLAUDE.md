@@ -44,8 +44,11 @@ folkseq <command> --help
 ```bash
 # Probe duration first (needed for fade-out calculation)
 DURATION=$(ffprobe -v error -show_entries format=duration -of csv=p=0 input.mov)
+# Cap at 14:59 (899s) — trim from end if longer
+if [ $(echo "$DURATION > 899" | bc) -eq 1 ]; then DURATION=899; fi
 
 ffmpeg -i input.mov \
+  -t ${DURATION} \
   -vf "crop=4096:2304:0:12,scale=3840:2160,fade=t=in:st=0:d=0.5,fade=t=out:st=${DURATION}-3:d=3" \
   -c:v libx264 -profile:v high -preset slow \
   -b:v 35M -maxrate 40M -bufsize 80M \
@@ -57,12 +60,26 @@ ffmpeg -i input.mov \
   -y output.mp4
 ```
 
+### Max Duration
+
+- **Hard cap**: 14 minutes 59 seconds (899s). Videos longer than this are trimmed from the end.
+- Always starts at 0:00 — the beginning of the session is never cut.
+- Fades are applied at the trimmed end, so the fade-out is always clean.
+
 ### Fade Settings
 
 - **Fade in**: 0.5s video + audio (barely perceptible, smooths the hard cut)
 - **Fade out**: 3s video + audio (graceful ending, standard for music content)
 - Fades are baked into the transcode step — no extra step required
 - Duration is probed via ffprobe before encoding so fade-out timing is exact
+
+### Re-upload Procedure
+
+YouTube does not allow replacing a video file. To fix an already-uploaded episode:
+1. Delete the old video: `youtube.videos().delete(id=VIDEO_ID)`
+2. Clear `video_id` in `schedule.json` (keep the schedule entry and publish time)
+3. Re-transcode from the original .mov
+4. Re-upload with `folkseq upload NNN` — picks up existing schedule entry and thumbnail
 
 ### Source Video Stats (Folk Sequence 000.mov)
 
