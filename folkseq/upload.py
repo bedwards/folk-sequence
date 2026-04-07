@@ -6,7 +6,34 @@ from pathlib import Path
 
 OUTPUT_DIR = Path("output")
 SCHEDULE_PATH = OUTPUT_DIR / "logs" / "schedule.json"
+ESSAYS_PATH = OUTPUT_DIR / "logs" / "essays.json"
 LOGS_DIR = OUTPUT_DIR / "logs"
+
+
+def _build_description(episode):
+    """Build the video description from the registered companion essay.
+
+    Upload requires an essay to be registered first via `folkseq essay`.
+    Raises SystemExit if no essay exists for the episode.
+    """
+    if not ESSAYS_PATH.exists():
+        print(f"ERROR: No essays.json found.")
+        print(f"Register an essay first: folkseq essay {episode} --url URL --title \"...\" --comment \"...\"")
+        raise SystemExit(1)
+    essays = json.loads(ESSAYS_PATH.read_text())
+    essay = essays.get(episode)
+    if not essay:
+        print(f"ERROR: No essay registered for episode {episode}.")
+        print(f"Register one first: folkseq essay {episode} --url URL --title \"...\" --comment \"...\"")
+        raise SystemExit(1)
+    return (
+        "A screen recording session creating music in Bitwig Studio.\n\n"
+        "---\n\n"
+        f"Companion essay: {essay['title']}\n"
+        f"{essay['url']}\n\n"
+        f"{essay['comment']}\n\n"
+        "jalopy.music\n"
+    )
 
 
 def load_schedule():
@@ -102,6 +129,9 @@ def upload(episode, schedule=None):
     print(f"Video:        {video_path}")
     print(f"Publish at:   {publish_time_iso}")
 
+    # Build description — include companion essay if registered
+    description = _build_description(episode)
+
     # Build authenticated client
     youtube = build_youtube()
 
@@ -109,7 +139,7 @@ def upload(episode, schedule=None):
     body = {
         "snippet": {
             "title": f"Folk Sequence {episode}",
-            "description": "A screen recording session creating music in Bitwig Studio.",
+            "description": description,
             "tags": [
                 "bitwig", "bitwig studio", "music production", "screen recording",
                 "daw", "electronic music", "folk", "ambient", "generative",

@@ -156,6 +156,20 @@ Every episode has a companion essay published as a public GitHub gist. Each essa
 - `folkseq essay --retry-pending` — retry failed comments for any videos that are now public
 - State stored in `output/logs/essays.json`
 
+**Per-episode workflow** (in order):
+1. Record `Folk Sequence NNN.mov` in Bitwig
+2. `folkseq transcode "/Volumes/Lacie/videos/folk-sequence/Folk Sequence NNN.mov"`
+3. `folkseq thumbnail NNN`
+4. Write essay to `/tmp/folk-sequence-NNN-slug.md`
+5. `cat /tmp/...md | gh gist create --public --desc "..." --filename "folk-sequence-NNN-slug.md"` — capture URL
+6. `folkseq essay NNN --url URL --title "..." --comment "..."` — registers essay (says "not yet uploaded" — that's fine)
+7. `folkseq schedule --days 1`
+8. `folkseq upload NNN` — REQUIRES the essay to exist (hard-fails otherwise). Description is built from the essay, no fallback.
+9. After 3 PM publish: cron loop posts the comment automatically (must be running)
+10. Manually pin the comment in YouTube Studio
+
+`folkseq upload` will refuse to run if no essay is registered for the episode. This is intentional — every video must ship with its companion essay.
+
 ## Channel Metadata
 
 - **Name**: Folk Sequence (13/100 chars)
