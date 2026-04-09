@@ -58,7 +58,15 @@ def cmd_essay(args):
     if args.retry_pending:
         post_pending_comments()
     else:
-        add_essay(args.episode, args.url, args.title, args.comment)
+        tags = [t.strip() for t in args.tags.split(",")] if args.tags else None
+        add_essay(
+            args.episode,
+            args.url,
+            args.title,
+            args.comment,
+            topic=args.topic,
+            tags=tags,
+        )
 
 
 def main():
@@ -126,7 +134,9 @@ examples:
     p = subparsers.add_parser("essay", help="Attach companion essay to an episode")
     p.add_argument("episode", nargs="?", help="Episode number (e.g., 001)")
     p.add_argument("--url", help="Public gist URL")
-    p.add_argument("--title", help="Essay title")
+    p.add_argument("--title", help="Essay title (used in description block)")
+    p.add_argument("--topic", help="Short SEO topic phrase used in the video title: 'Folk Sequence NNN — {topic}'")
+    p.add_argument("--tags", help="Comma-separated per-episode tags appended to the global base tags")
     p.add_argument("--comment", help="Comment text (also appended to description)")
     p.add_argument("--retry-pending", action="store_true", help="Retry posting comments queued from when videos were private")
     p.set_defaults(func=cmd_essay)

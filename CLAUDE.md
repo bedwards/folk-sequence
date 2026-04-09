@@ -162,11 +162,16 @@ Every episode has a companion essay published as a public GitHub gist. Each essa
 3. `folkseq thumbnail NNN`
 4. Write essay to `/tmp/folk-sequence-NNN-slug.md`
 5. `cat /tmp/...md | gh gist create --public --desc "..." --filename "folk-sequence-NNN-slug.md"` — capture URL
-6. `folkseq essay NNN --url URL --title "..." --comment "..."` — registers essay (says "not yet uploaded" — that's fine)
+6. `folkseq essay NNN --url URL --title "..." --topic "..." --tags "tag1,tag2,tag3" --comment "..."` — registers essay with SEO metadata
 7. `folkseq schedule --days 1`
-8. `folkseq upload NNN` — REQUIRES the essay to exist (hard-fails otherwise). Description is built from the essay, no fallback. After successful upload, automatically PATCHes the gist to add `Watch on YouTube: https://youtu.be/VIDEO_ID` at the top (after the subtitle line) and at the bottom (after a separator).
+8. `folkseq upload NNN` — REQUIRES the essay (with `topic`) to exist. Hard-fails otherwise. Title becomes `Folk Sequence NNN — {topic}`. Description leads with a keyword-rich opener and includes the essay block. Tags = global base tags + per-episode tags. After successful upload, automatically PATCHes the gist to add `Watch on YouTube: https://youtu.be/VIDEO_ID` at the top (after the subtitle line) and at the bottom (after a separator).
 9. After 3 PM publish: cron loop posts the comment automatically (must be running)
 10. Manually pin the comment in YouTube Studio
+
+**SEO conventions** (encoded in `folkseq/upload.py`):
+- **Title**: `Folk Sequence NNN — {topic}` (keep topic short — total title under 70 chars)
+- **Tags**: 15 global base tags (bitwig, bitwig studio, bitwig 6, folk, folktronica, ambient folk, alt country, americana, electronic folk, music production no talking, bitwig session, daw walkthrough, no narration, screen recording, folk music production) + per-episode `tags` from essays.json
+- **Description opener**: `Folk Sequence NNN — {topic}. A folktronica and folk music production session in Bitwig Studio 6, recorded as a continuous take with no narration, no edits, and no cuts. Part of a daily series.` followed by the essay block
 
 `folkseq upload` will refuse to run if no essay is registered for the episode. This is intentional — every video must ship with its companion essay.
 

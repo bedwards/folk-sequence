@@ -9,31 +9,70 @@ SCHEDULE_PATH = OUTPUT_DIR / "logs" / "schedule.json"
 ESSAYS_PATH = OUTPUT_DIR / "logs" / "essays.json"
 LOGS_DIR = OUTPUT_DIR / "logs"
 
+# Global base tags applied to every Folk Sequence video.
+# Per-episode extra tags are registered via `folkseq essay --tags`.
+BASE_TAGS = [
+    "bitwig",
+    "bitwig studio",
+    "bitwig 6",
+    "folk",
+    "folktronica",
+    "folk music production",
+    "ambient folk",
+    "alt country",
+    "americana",
+    "electronic folk",
+    "music production no talking",
+    "bitwig session",
+    "daw walkthrough",
+    "no narration",
+    "screen recording",
+]
 
-def _build_description(episode):
-    """Build the video description from the registered companion essay.
 
-    Upload requires an essay to be registered first via `folkseq essay`.
-    Raises SystemExit if no essay exists for the episode.
-    """
+def _load_essay(episode):
+    """Load the registered essay for an episode, hard-failing if missing."""
     if not ESSAYS_PATH.exists():
-        print(f"ERROR: No essays.json found.")
-        print(f"Register an essay first: folkseq essay {episode} --url URL --title \"...\" --comment \"...\"")
+        print("ERROR: No essays.json found.")
+        print(f"Register an essay first: folkseq essay {episode} --url URL --title \"...\" --topic \"...\" --comment \"...\"")
         raise SystemExit(1)
     essays = json.loads(ESSAYS_PATH.read_text())
     essay = essays.get(episode)
     if not essay:
         print(f"ERROR: No essay registered for episode {episode}.")
-        print(f"Register one first: folkseq essay {episode} --url URL --title \"...\" --comment \"...\"")
+        print(f"Register one first: folkseq essay {episode} --url URL --title \"...\" --topic \"...\" --comment \"...\"")
         raise SystemExit(1)
+    if not essay.get("topic"):
+        print(f"ERROR: Essay for episode {episode} is missing 'topic' (used for the SEO title).")
+        print(f"Re-register with --topic: folkseq essay {episode} --url ... --title ... --topic \"...\" --comment ...")
+        raise SystemExit(1)
+    return essay
+
+
+def _build_title(episode, essay):
+    """Build the SEO title: 'Folk Sequence NNN — [topic]'."""
+    return f"Folk Sequence {episode} — {essay['topic']}"
+
+
+def _build_description(episode, essay):
+    """Build the keyword-rich description with the companion essay block."""
     return (
-        "A screen recording session creating music in Bitwig Studio.\n\n"
-        "---\n\n"
+        f"Folk Sequence {episode} — {essay['topic']}. "
+        f"A folktronica and folk music production session in Bitwig Studio 6, "
+        f"recorded as a continuous take with no narration, no edits, and no cuts. "
+        f"Part of a daily series.\n\n"
+        f"---\n\n"
         f"Companion essay: {essay['title']}\n"
         f"{essay['url']}\n\n"
         f"{essay['comment']}\n\n"
-        "jalopy.music\n"
+        f"jalopy.music\n"
     )
+
+
+def _build_tags(essay):
+    """Combine global base tags with the essay's per-episode tags."""
+    extra = essay.get("tags", []) or []
+    return BASE_TAGS + extra
 
 
 def load_schedule():
@@ -125,12 +164,17 @@ def upload(episode, schedule=None):
 
     # Resolve publish time
     publish_time_iso = resolve_publish_time(episode, schedule)
+
+    # Load essay (hard-fails if missing) and build SEO metadata
+    essay = _load_essay(episode)
+    title = _build_title(episode, essay)
+    description = _build_description(episode, essay)
+    tags = _build_tags(essay)
+
     print(f"Episode:      Folk Sequence {episode}")
+    print(f"Title:        {title}")
     print(f"Video:        {video_path}")
     print(f"Publish at:   {publish_time_iso}")
-
-    # Build description — include companion essay if registered
-    description = _build_description(episode)
 
     # Build authenticated client
     youtube = build_youtube()
@@ -138,12 +182,9 @@ def upload(episode, schedule=None):
     # Video metadata
     body = {
         "snippet": {
-            "title": f"Folk Sequence {episode}",
+            "title": title,
             "description": description,
-            "tags": [
-                "bitwig", "bitwig studio", "music production", "screen recording",
-                "daw", "electronic music", "folk", "ambient", "generative",
-            ],
+            "tags": tags,
             "categoryId": "10",  # Music
         },
         "status": {

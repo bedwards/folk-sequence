@@ -112,20 +112,32 @@ def _make_description(title, url, comment):
     )
 
 
-def add_essay(episode, gist_url, title, comment):
+def add_essay(episode, gist_url, title, comment, topic=None, tags=None):
     """Register an essay for an episode and apply it to YouTube.
 
     Idempotent. Safe to re-run.
+
+    Args:
+        episode: Episode number string (e.g., "001").
+        gist_url: Public gist URL.
+        title: Essay title (used in description block).
+        comment: Comment text (used in description and YouTube comment).
+        topic: Short SEO topic phrase used in the video title:
+            "Folk Sequence NNN — {topic}". REQUIRED for upload to work.
+        tags: List of per-episode tags appended to the global base tags.
     """
     from folkseq.auth import build_youtube
     from googleapiclient.errors import HttpError
 
     essays = _load_essays()
+    existing = essays.get(episode, {})
     essays[episode] = {
         "title": title,
         "url": gist_url,
         "comment": comment,
-        "comment_posted": essays.get(episode, {}).get("comment_posted", False),
+        "topic": topic if topic is not None else existing.get("topic"),
+        "tags": tags if tags is not None else existing.get("tags", []),
+        "comment_posted": existing.get("comment_posted", False),
     }
     _save_essays(essays)
 
